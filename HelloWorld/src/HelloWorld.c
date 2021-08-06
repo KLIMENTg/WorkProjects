@@ -13,5 +13,6 @@
 
 int main(void) {
 	puts("!!!Hello World!!!"); /* prints !!!Hello World!!! */
+	puts("!!!Nobody says it faster than C!!!");
 	return 0;
 }
