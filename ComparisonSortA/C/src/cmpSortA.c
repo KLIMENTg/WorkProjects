@@ -1,7 +1,7 @@
 /*
  ============================================================================
  Name        : ComparisonSortA.c
- Author      : Kgueorgu
+ Author      : KLIMENTg
  Version     :
  Copyright   : Your copyright notice
  Description : Comparison Sorting in C, Ansi-style
