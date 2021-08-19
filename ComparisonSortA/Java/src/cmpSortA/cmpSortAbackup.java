@@ -1,11 +1,3 @@
-/*
- * This program computes the number of inversions among an unordered set of integers.
- * There are 100 000 integers from 1 to 100 000 (inclusive) in random order.
- * 
- * For example: the set of integers [1, 2, 3, 4] contains no inversions as they are in order,
- * but the set [1, 3, 2, 4] contains one inversion namely - the 3 comes before the 2.
- */
-
 package cmpSortA;
 
 import java.io.File;
@@ -41,14 +33,13 @@ public class cmpSortA {
 		answer = this.naiveInsertCount(myIntArray);
 		long estimatedTime = System.nanoTime() - startTime;
 		
-		System.out.println("Inversion count naively " + answer + " in " + estimatedTime / 1000000000.0 + " s");
+		System.out.println("Inversion count naively  " + answer + " in " + estimatedTime / 1000000000.0 + " s");
         
         inversions = 0;
         
     long beginTime = System.nanoTime();
     List<Integer> hugeArray = convertArrayType( myIntArray );
-    
-    divAndConquer05( hugeArray );
+    List<Integer> hugeSorted = divAndConquer05( hugeArray );
     long totalTime = System.nanoTime() - beginTime;
         
     System.out.println( "Original Array has: " + inversions + " number of INVersions in " + totalTime / 1000000000.0 + " s");
@@ -59,36 +50,31 @@ public class cmpSortA {
 		System.out.println( "Naive Inversions: " + inversions + "." );
 	}
 	
-//	public void testMergeInversions( int Array[], boolean printArray ) {
-//		inversions = 0;
-//		List<Integer> integerList = loadList( Array );
-//		divAndConquer05( integerList );
-//        
-//        if( printArray == true ) {
-//        	System.out.println( "Merge Inversions: " + inversions + " for array: " + integerList.toString() );	
-//        } else {
-//        	System.out.println( "Merge Inversions: " + inversions + "." );
-//        }
-//        
-//	}
-//	
-//	public List<Integer> loadList( int Array[] ) {
-//		List<Integer> intList = new ArrayList<Integer>();
-//		
-//		for( int i = 0; i < Array.length; i++ ) {
-//			intList.add( Array[i] );
-//		}
-//		
-//		return intList;
-//	}
+	public void testMergeInversions( int Array[], boolean printArray ) {
+		inversions = 0;
+		List<Integer> integerList = loadList( Array );
+		divAndConquer05( integerList );
+        
+        if( printArray == true ) {
+        	System.out.println( "Merge Inversions: " + inversions + " for array: " + integerList.toString() );	
+        } else {
+        	System.out.println( "Merge Inversions: " + inversions + "." );
+        }
+        
+	}
 	
-	/*
-	 * This function converts the original input array type
-	 * from ordinary (primitive) integer array into the
-	 * non-primitive data structure ArrayList<Integer>
-	 */
+	public List<Integer> loadList( int Array[] ) {
+		List<Integer> intList = new ArrayList<>();
+		
+		for( int i = 0; i < Array.length; i++ ) {
+			intList.add( Array[i] );
+		}
+		
+		return intList;
+	}
+	
 	public List<Integer> convertArrayType( int Array[] ) {
-		List<Integer> newArrayType = new ArrayList<Integer>();
+		List<Integer> newArrayType = new ArrayList<>();
 		
 		for( int i = 0; i < Array.length; i++ ) {
 			newArrayType.add( Array[i] );
@@ -97,9 +83,6 @@ public class cmpSortA {
 		return newArrayType;
 	}
 	
-	/*
-	 * This function reads the input array from file.
-	 */
 	public int[] readInputArray() {
 		int[] myIntArray = new int[100000];
 		try {
@@ -120,9 +103,6 @@ public class cmpSortA {
 		return myIntArray;
 	}
 	
-	/*
-	 * This function counts the number of inversions naively
-	 */
 	public long naiveInsertCount(int Array[]) {
 		long inv = 0;
 		for( int i=0; i < Array.length; i++ ) {
@@ -134,11 +114,7 @@ public class cmpSortA {
 		}
 		return inv;
 	}
-	
-	/*
-	 * This function counts the number of inversions,
-	 * while sorting the input array.
-	 */
+
 	public List<Integer> divAndConquer05( List<Integer> inputArr ) {
 		
 		// Base Case
@@ -154,7 +130,7 @@ public class cmpSortA {
 		// Put together
 		int leftIndex = 0;
 		int rightIndex = 0; 
-		List<Integer> sortedArr = new ArrayList<Integer>();
+		List<Integer> sortedArr = new ArrayList<>();
 		
 		for( int k = 0; k < n; k++ ) {
 			if( L.size() == leftIndex ) {

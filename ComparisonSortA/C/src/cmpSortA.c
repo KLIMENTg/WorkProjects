@@ -4,7 +4,9 @@
  Author      : KLIMENTg
  Version     :
  Copyright   : Your copyright notice
- Description : Comparison Sorting in C, Ansi-style
+ Description : Time Benchmark program computes the time C takes to sort an unordered array
+  	  	  	   in order to compare to Java Benchmark.
+ 	 	 	   Can be modified to count the number of inversions as it's Java counterpart.
  ============================================================================
  */
 
@@ -45,7 +47,7 @@ int main(void)
 	int n = INPUTSIZE;
 	int* sortedArr;
 	int* inputArr = (int*) malloc( n * sizeof(int) );
-	//int tempArr[] = {3, 2, 1, 4};
+
 	memcpy(inputArr, tempArr, n * sizeof(int));
 
 	clock_t start_t, end_t;
@@ -54,13 +56,16 @@ int main(void)
 	end_t = clock();
 	double total_t = (double)(end_t - start_t) / CLOCKS_PER_SEC;
 	printf("Total time taken by CPU: %f\n", total_t  );
-	// time: 0.029776 s
 
 	//testPrinter( sortedArr, n );
 
 	return EXIT_SUCCESS;
 }
 
+
+/*
+ * This function sorts the input array.
+ */
 int* divAndConqSort1(int* inArray, int arrLength)
 {
 	int* mergeArr = (int*) malloc( arrLength * sizeof(int) );
@@ -118,14 +123,3 @@ int* divAndConqSort1(int* inArray, int arrLength)
 	free( mergeArr );
 	return inArray;
 }
-
-
-
-
-
-
-
-
-
-
-
