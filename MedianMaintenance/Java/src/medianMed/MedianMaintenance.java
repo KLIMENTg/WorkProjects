@@ -16,59 +16,59 @@ import java.util.*;
 
 public class MedianMaintenance{
 	
+	final int maxFileSize = 10000;
+	final int error = -1;
 	int median = 0;
-	int[] medianArr = new int[10000];
-	int[] myIntArray;
-	
+	int[] medianArr = new int[maxFileSize];
+	int[] inputArray;
 	
 	/*
 	 * This function imports the data from an input file which contains
 	 * the integers 1 to 10 000 in unsorted order. It then loads it
-	 * into an array called myIntArray.
+	 * into an array called inputArray.
+	 * 
+	 * @param None
+	 *
+	 * @return [int[]] - inputArray
 	 */
 	public int[] readInputArray() {
-		int[] myIntArray = new int[10000];
+		
+		int[] inputArray = new int[ maxFileSize ];
 		try {
-			 File myObj = new File("./src/medianMed/median.txt");
-		     Scanner myReader = new Scanner(myObj);
-		     int k=0;
-		     while (myReader.hasNextLine()) {
-		        String data = myReader.nextLine();
-		        int a = Integer.parseInt(data);
-		        myIntArray[k++] = a;        
+			 File fileHandler = new File( "./src/medianMed/median.txt" );
+		     Scanner fileScanner = new Scanner( fileHandler );
+		     
+		     int lineNumber = 0;
+		     while (fileScanner.hasNextLine()) {
+		        String data = fileScanner.nextLine();
+		        int integerFromFile = Integer.parseInt( data );
+		        inputArray[lineNumber++] = integerFromFile;        
 		      }
-		      myReader.close();
+		      fileScanner.close();
 		} catch (FileNotFoundException e) {
 		      System.out.println("An error occurred.");
 		      e.printStackTrace();
-		      return new int [1];
+		      return new int [ error ];
 		}
-		return myIntArray;
+		
+		return inputArray;
 	}
-
-	
-	/*
-	 * This function transfers the contents of 
-	 * myIntArray into a new tempArr
-	 */
-	void arrCopy(int[] tempArr,int[] myIntArray) {
-		for (int i=0; i<tempArr.length; i++) {
-			tempArr[i] = myIntArray[i];
-		}	
-	}
-	
 	
 	/*
 	 * This function finds the median among the
-	 * integers of an array that is passed to it
+	 * integers of the array that is passed to it.
+	 * 
+	 * @param [int[]] inputArray
+	 * 
+	 * @return median
 	 */
-	int getMedian(int[] tempArr) {
-		//logic to find the median
-		if( (tempArr.length)%2 != 0) {
-			median = tempArr[ ( (tempArr.length) + 1 ) / 2 -1 ]; //r+1=k is the number of elements x1, x2, ..., xk
+	int getMedian(int[] inputArray) {
+		
+		if( (inputArray.length) % 2 != 0) {
+			median = inputArray[ ( (inputArray.length) + 1 ) / 2 -1 ]; // r+1=k is the number of elements x1, x2, ..., xk
 		}
 		else {
-			median = tempArr[ ( (tempArr.length) ) / 2 -1 ];
+			median = inputArray[ ( (inputArray.length) ) / 2 -1 ];
 		}
 		return median;
 	}
@@ -76,48 +76,62 @@ public class MedianMaintenance{
 	
 	/*
 	 * This is the Median Maintenance Algorithm, that makes use of
-	 * the Heap Data Structure to calculate a median of a set of numbers.
-	 * By having two heaps called Hlow and Hhigh we can determine the
-	 * median of a set of numbers as they come in as a stream, or one
-	 * by one. This is a way to always have a median in real time.
+	 * the Heap Data Structure (Java: PriorityQueue<Integer>) to calculate 
+	 * a median of a set of numbers.
+	 * 
+	 * By having two heaps called heapLow and heapHigh we can determine the
+	 * median of a set of numbers as they come in as a stream (i.e. one
+	 * by one). This is a way to always have a median in real time,
+	 * in other words the algorithm maintains the current median available
+	 * for O(1), constant time look up.
+	 * 
+	 * [0] - Add To Heap: If element is greater than the Max of the Low-Heap, place in High-Heap,
+	 * otherwise it goes into the Low-Heap.
+	 * 
+	 * [1] - Heaps Rebalance: If the High-Heap is bigger than the Low-Heap by 1,
+	 * move element from High->Low, and if Low-Heap is bigger than Low-Heap, move
+	 * element from Low->High.
+	 * 
+	 * [2] - Fill Median Array: If Heaps are equal, take the max of the Low-Heap (by design: 2 3 4 5: 3 ). 
+	 * Otherwise take the top-element of the larger Heap (min or max respectively).
 	 */
 	void calculateMedianMaintenance() {
-		PriorityQueue<Integer> Hhigh = new PriorityQueue<Integer>();
-		PriorityQueue<Integer> Hlow =new PriorityQueue<>((x, y) -> Integer.compare(y, x));
+		PriorityQueue<Integer> heapHigh = new PriorityQueue<Integer>(); // Declare Min-Heap
+		PriorityQueue<Integer> heapLow = new PriorityQueue<>( (x, y) -> Integer.compare(y, x) ); // Declare Max-Heap
 		
-		//First element is the median
-		Hlow.add(myIntArray[0]);
-		medianArr[0] = myIntArray[0];
+		// First element is the median
+		heapLow.add(inputArray[0]);
+		medianArr[0] = inputArray[0];
 		
-		for(int i=1; i<myIntArray.length; i++) {
+		for(int inputIdx = 1; inputIdx < inputArray.length; inputIdx++) {
 			
-			if(myIntArray[i] > Hlow.peek()) {
-				Hhigh.add(myIntArray[i]);
+			// Find Correct Heap [0]
+			if(inputArray[ inputIdx ] > heapLow.peek()) {
+				heapHigh.add(inputArray[inputIdx]);
 			}
 			
 			else {
-				Hlow.add(myIntArray[i]);
+				heapLow.add(inputArray[inputIdx]);
 			}
 			
-			//Now Rebalance
-			if(	(Hhigh.size() - Hlow.size()	) > 1) {
-				Hlow.add(Hhigh.poll());
+			// Now Re-balance[1]
+			if(	(heapHigh.size() - heapLow.size()	) > 1) {
+				heapLow.add(heapHigh.poll());
 			}
-			else if(	(Hlow.size() - Hhigh.size()	)	>	1) {
-				Hhigh.add(Hlow.poll());
+			else if(	(heapLow.size() - heapHigh.size()	)	>	1) {
+				heapHigh.add(heapLow.poll());
 			}
-			//Rebalance done
 			
-			//Fill median array
-			if(	(Hlow.size() + Hhigh.size()	)	%2	==	0) {
-				medianArr[i] = Hlow.peek();
+			// Fill median array [2]
+			if(	(heapLow.size() + heapHigh.size()	) % 2	==	0) {
+				medianArr[inputIdx] = heapLow.peek();
 			}
 			else {
-				if(	Hhigh.size()	>	Hlow.size()	) {
-					medianArr[i]	=	Hhigh.peek();
+				if(	heapHigh.size()	>	heapLow.size()	) {
+					medianArr[inputIdx]	=	heapHigh.peek();
 				}
 				else {
-					medianArr[i]	=	Hlow.peek();
+					medianArr[inputIdx]	=	heapLow.peek();
 				}
 			}
 			
@@ -126,23 +140,19 @@ public class MedianMaintenance{
 		
 	}
 
-		
 	public static void main(String args[]) {
 		
-		MedianMaintenance obj = new MedianMaintenance();
-		obj.myIntArray = obj.readInputArray();
-		obj.calculateMedianMaintenance();
+		MedianMaintenance medMain = new MedianMaintenance();
+		medMain.inputArray = medMain.readInputArray();
+		medMain.calculateMedianMaintenance();
 		
 		int medianCounter = 0;
-		for( int i = 0; i<obj.medianArr.length; i++) {
-			medianCounter = medianCounter + obj.medianArr[i];
-			}
-		System.out.print("Median total is " + medianCounter);//%10000 );
+		for( int medianIdx = 0; medianIdx < medMain.medianArr.length; medianIdx++) {
+			medianCounter = medianCounter + medMain.medianArr[medianIdx];
+		}
+		System.out.print("Median total is " + medianCounter + '.');
 		
 	}
-	
-	
-	
 }
 
 
