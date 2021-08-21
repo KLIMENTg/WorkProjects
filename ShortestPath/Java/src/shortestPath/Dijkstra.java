@@ -9,9 +9,12 @@ import java.util.Scanner;
 
 public class Dijkstra{
 	
-	private ArrayList<ArrayList<Arcs> > dijkstraAdjList;
-	ArrayList<Integer> X; // Nodes explored
-	int [] A; // Distances
+	private ArrayList<ArrayList<Arcs> > adjacencyList;
+	ArrayList<Integer> exploredNodes; // Nodes explored
+	int [] shortestDistances; // Distances
+	final int n = 200; // Number of nodes in graph
+	final int INF = 10000000; // Large number used for infinity
+	
 	
 	/*
 	 * This function loads the data from the input file.
@@ -25,41 +28,38 @@ public class Dijkstra{
 	 */
 	public void importGraph() {
 	
-			this.dijkstraAdjList = new ArrayList<ArrayList<Arcs>>();
-			this.X = new ArrayList<Integer>();
+			this.adjacencyList = new ArrayList<ArrayList<Arcs>>();
+			this.exploredNodes = new ArrayList<Integer>();
 			
 			try {
-				File myObj = new File("./src/shortestPath/dijkstraData.txt");
-				Scanner myReader = new Scanner(myObj);
+				File fileHandler = new File("./src/shortestPath/dijkstraData.txt");
+				Scanner fileScanner = new Scanner(fileHandler);
 			
-				int nodeIdx = 0;
-				while (myReader.hasNextLine()) {
-					String data = myReader.nextLine();
+				int sourceNode = 0;
+				while ( fileScanner.hasNextLine() ) {
+					String data = fileScanner.nextLine();
 				
-					this.dijkstraAdjList.add( new ArrayList<Arcs>() );
-//					for (String node: data.split("\t")) {
+					this.adjacencyList.add( new ArrayList<Arcs>() );
 					String[] nodeArr = data.split("\t");
 					
-					for( int i=0; i<nodeArr.length; i++  ) {
+					for( int destinationIdx = 0; destinationIdx < nodeArr.length; destinationIdx++  ) {
 						
-						
-						String[] inside = nodeArr[i].split(",");
+						String[] nodeInfo = nodeArr[ destinationIdx ].split(",");
 						
 						Arcs nodeInt;
-						if(inside.length == 1) {
-							nodeInt = new Arcs(inside[0]);
+						if(nodeInfo.length == 1) {
+							nodeInt = new Arcs( nodeInfo[0] );
 						}
 						else {
-							nodeInt = new Arcs(inside[0] , inside[1]);
+							nodeInt = new Arcs( nodeInfo[0] , nodeInfo[1] );
 						}
-						// = Integer.parseInt(node);
-						this.dijkstraAdjList.get(nodeIdx).add( nodeInt );
+						this.adjacencyList.get( sourceNode ).add( nodeInt );
 					
 					}
-					nodeIdx++;
-					this.X.add(nodeIdx);
+					sourceNode++;
+					this.exploredNodes.add( sourceNode );
 			    }
-			    myReader.close();
+			    fileScanner.close();
 			} catch (FileNotFoundException e) {
 			      System.out.println("An error occurred.");
 			      e.printStackTrace();
@@ -67,16 +67,18 @@ public class Dijkstra{
 		}
 	
 	/*
-	 * This function removes a node from the Adjacency List
-	 * once that node has been explored/seen and has been added
+	 * This function removes a node from the Adjacency List.
+	 * Once called that node has been explored/seen and has been added
 	 * to the 'explored' list.
 	 */
-	public void removeNode(int nodetodelete) {
-		for (int i=0; i<X.size(); i++) {
-			ArrayList<Arcs> sock = this.dijkstraAdjList.get(X.get(i)-1);
-			for(int j=1; j<sock.size(); j++) {
-				if(sock.get(j).getNode()==nodetodelete) {
-					sock.remove(j);
+	public void removeNode(int nodeToDelete) {
+		for (int rootNodeIdx = 0; rootNodeIdx < exploredNodes.size(); rootNodeIdx++) {
+			
+			ArrayList<Arcs> nodeSock = this.adjacencyList.get(exploredNodes.get( rootNodeIdx )-1);
+			for(int destinationNodeIdx = 1; destinationNodeIdx < nodeSock.size(); destinationNodeIdx++) {
+				
+				if( nodeSock.get( destinationNodeIdx ).getNode() == nodeToDelete ) {
+					nodeSock.remove( destinationNodeIdx );
 				}
 			}
 		}
@@ -86,45 +88,55 @@ public class Dijkstra{
 	/*
 	 * This is the Dijkstra's Shortest Path Algorithm
 	 * used to find the shortest path within a directed
-	 * graph.
+	 * graph from a chosen source vertex to all other
+	 * nodes. This is implementation gets a worst
+	 * case run time of O(nm), where n is the number
+	 * of nodes and m the number of edges.
+	 * 
+	 * [1]: -1 due to adjacency list indexes starting at 0, while nodes start at 1.
+	 * i.e. exploredNodes.get(0) - returns source node (1), -1 = 0. adjacencyList.get(0) returns
+	 * all the connected nodes to the source node.
 	 */
-	public void dJIKSTRA() {
-		X = new ArrayList<Integer>();
-		A = new int [201];
-		int shortestDist = 10000000;
-		int atNode = 1;
+	public void dijkstraSP() {
+		exploredNodes = new ArrayList<Integer>();
+		shortestDistances = new int [ n + 1 ];
+		int shortestDist = INF;
+		int closestNodeFound = 1;
 		
-		X.add(1);
-		while(X.size() < dijkstraAdjList.size()) {
+		exploredNodes.add(1); // Source Node (Node 1)
+		
+		while(exploredNodes.size() < adjacencyList.size()) {
 			
-			for (int i=0; i<X.size(); i++) {
-				ArrayList<Arcs> currentSock = this.dijkstraAdjList.get(X.get(i)-1);
-				for(int j=1; j<currentSock.size(); j++) {
-					Arcs returnPair = currentSock.get(j);
-					if(!checkIfExplored(returnPair.getNode())) {
-						if(A[ X.get(i) ] + returnPair.getDistance() < shortestDist) {
-							shortestDist = A[ X.get(i) ] + returnPair.getDistance();
-							atNode = returnPair.getNode();
+			for (int vectorTailIdx = 0; vectorTailIdx < exploredNodes.size(); vectorTailIdx++) {
+				
+				ArrayList<Arcs> vectorHeadList = this.adjacencyList.get( exploredNodes.get( vectorTailIdx )-1 ); // [1]
+				
+				for(int destinationIdx = 1; destinationIdx < vectorHeadList.size(); destinationIdx++) {
+					
+					Arcs destinationPair = vectorHeadList.get( destinationIdx );
+					
+					if( !checkIfExplored( destinationPair.getNode() ) ) {
+						int shortestDistanceContender = shortestDistances[ exploredNodes.get(vectorTailIdx) ] + destinationPair.getDistance();
+						if( shortestDistanceContender < shortestDist) {
+							shortestDist = shortestDistanceContender;
+							closestNodeFound = destinationPair.getNode();
 						}
 					}
 				}
 			}
-			X.add(atNode);
-			removeNode(atNode);
-			A[atNode] = shortestDist;
-			shortestDist = 10000000;
-		}
-		
-		
-		
+			exploredNodes.add( closestNodeFound );
+			removeNode( closestNodeFound );
+			shortestDistances[ closestNodeFound ] = shortestDist;
+			shortestDist = INF;
+		}		
 	}
 	
 	/*
 	 * This function checks whether a node has been explored
 	 */
 	public boolean checkIfExplored(int node) {
-		for(int i=0; i<X.size(); i++) {
-			if(X.get(i)==node) {
+		for(int exploredNodeIdx = 0; exploredNodeIdx < exploredNodes.size(); exploredNodeIdx++) {
+			if(exploredNodes.get( exploredNodeIdx ) == node) {
 				return true;
 			}
 		}
@@ -136,22 +148,20 @@ public class Dijkstra{
 	 */
 	public void printShortestDistances() {
 		System.out.println("Shortest distances are: ");
-		for(int i=1; i<A.length; i++) {
-			System.out.println( "Node#: " + i + " " + A[i] );
+		for(int nodeIdx = 1; nodeIdx < shortestDistances.length; nodeIdx++) {
+			System.out.println( "Node#: " + nodeIdx + " " + shortestDistances[nodeIdx] );
 			
 		}
 	}
 	
 	
 	public static void main(String[] args)
-	
     {	
-		Dijkstra obj = new Dijkstra();
-		obj.importGraph();
-		obj.dJIKSTRA();
-		obj.printShortestDistances();
+		Dijkstra shortestPathObj = new Dijkstra();
+		shortestPathObj.importGraph();
+		shortestPathObj.dijkstraSP();
+		shortestPathObj.printShortestDistances();
 		
     }
-	
 
 }

@@ -1,10 +1,14 @@
 package shortestPath;
 
-
+/*
+ * Container for node and distance. Where node is generally the vector head (destination),
+ * and only acting as a vector tail (source) in the first column 
+ */
 public class Arcs{
 	
 	private int node;
 	private int distance;
+	
 	int getNode(){
 		return this.node;
 	}
