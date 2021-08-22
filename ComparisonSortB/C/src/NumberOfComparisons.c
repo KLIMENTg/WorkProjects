@@ -16,16 +16,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
-#define INPUTSIZE 10000 // Probably a better way than hardcoding the constant. C isn't very good with file I/O anyway
-#define DEBUG 0 // A Debug flag: can be {0, 1}. See below how it is used.
+#define INPUTSIZE 10000 /* Probably a better way than hardcoding the constant. C isn't very good with file I/O anyway */
+#define DEBUG 0 /* A Debug flag: can be {0, 1}. See below how it is used. */
 
 // Function Prototypes
 void testCases( char testType[] );
+void runLargeDataSet( char testType[] );
 void divAndConquerBFirst( int* array, const int L, const int R);
 void divAndConquerBLast( int* array, int L, int R);
 void divAndConquerBMiddle( int* array, int L, int R);
-void divAndConquerBRandom( int* array, int L, int R);	// TODO: iMPLEMENT RANDOM PIVOT
+void divAndConquerBRandom( int* array, int L, int R);
+
 void swap( int* A, int* B );
 void runQSCmps(int* array, int len, char testType[] );
 int* fileLoader();
@@ -33,14 +36,29 @@ void printList( int* array, int len );
 
 int numberOfCmps = 0; // counts number of comparisons performed
 
-
-
-int main(void) {
+/**
+* Runs a few simple test cases and 4 times with a large unsorted
+* array. Compares the number of comparisons with pivot chosen to
+* be the first, last, median of three, or random. Average theoretical
+* performance ~ n log(n), approximately 132 000.
+*/
+int main(void)
+{
 	printf("Begin NumberOfComparisons\n");
 
-	//To change Algorithm put it's name below: First, Middle, Last
-	char toTest[] = "First";
-	testCases( toTest );
+	const unsigned int pivotChoices = 4;
+    char* pivotLocation[ pivotChoices ];
+    pivotLocation[0] = "First";
+    pivotLocation[1] = "Last";
+    pivotLocation[2] = "Middle";
+    pivotLocation[3] = "Random";
+
+	testCases( pivotLocation[0] );
+
+	for( unsigned int pivotChoiceIdx = 0; pivotChoiceIdx < pivotChoices; pivotChoiceIdx++ )
+	{
+	    runLargeDataSet( pivotLocation[pivotChoiceIdx] );
+	}
 
 	return EXIT_SUCCESS;
 }
@@ -52,7 +70,7 @@ int main(void) {
 |
 |  Parameters:
 |      testType (IN) -- A string indicating the type of test to do. Values can be
-|						"Middle", "First" and "Last"
+|						"Middle", "First", "Last" and "Random"
 |
 |  Returns:  VOID
 *----------------------------------------------------------------------------*/
@@ -85,8 +103,16 @@ void testCases( char testType[] )
 	int input8[] = {1,3,2};
 	runQSCmps(input8, sizeof(input8) / sizeof(int), testType );
 
-	int* assignmentInput = fileLoader();
-	runQSCmps( assignmentInput, INPUTSIZE, testType);
+
+}
+
+/*
+ * Runs the large data set on the unsorted array.
+ */
+void runLargeDataSet( char testType[] )
+{
+    int* assignmentInput = fileLoader();
+    runQSCmps( assignmentInput, INPUTSIZE, testType );
 }
 
 /**
@@ -104,35 +130,47 @@ void runQSCmps(int* array, int len, char qsType[] )
 {
 	numberOfCmps = 0;
 
-	if( strcmp( qsType, "First") == 0 ) { divAndConquerBFirst( array, 0, len - 1); }
-	else if ( strcmp( qsType, "Last" ) == 0 ) { divAndConquerBLast( array, 0, len - 1); }
-	else if ( strcmp( qsType, "Middle" ) == 0 ) { divAndConquerBMiddle( array, 0, len - 1); }
+	if( strcmp( qsType, "First") == 0 )
+	{
+	    divAndConquerBFirst( array, 0, len - 1);
+	}
+	else if ( strcmp( qsType, "Last" ) == 0 )
+	{
+	    divAndConquerBLast( array, 0, len - 1);
+	}
+	else if ( strcmp( qsType, "Middle" ) == 0 )
+	{
+	    divAndConquerBMiddle( array, 0, len - 1);
+	}
+	else if ( strcmp( qsType, "Random" ) == 0 )
+	{
+	    divAndConquerBRandom( array, 0, len - 1);
+	}
 
-	printf("Number of comparisons: %d, for: ", numberOfCmps);
+	printf("Number of comparisons: %d, pivot: %s, array size: %d", numberOfCmps, qsType, len);
 	if( len < 100 )
 	{
+	    printf(", for: ");
 		printList( array, len );
-	} else {
-		printf("list too long to print.");
 	}
 	printf("\n");
 }
 
-/*-----------------------------------------------------------------------------
+/*-------------------------------------------------------------------------------------------------------------
 |  Function divAndConquerB
 |
 |  Purpose: The DivAndConquerB algorithm with the first element in the subarray used
 |			as a pivot. A snapshot of QS in action:
-
-			[ 7 1 2 9 12 18 20 17 3 5 98 ... ]
-			  |     |			  |
-			Pivot   |			  |
-			  smallestRGroup   nextElem
-
-		    The pivot is compared versus the nextElem. If is less, it is swapped with smallestRGroup (putting
-		    the the small element in the beginning of the larger group) and incrementing smallestRGroup. If it
-		    is larger, we just look at the next element. At the end we swap the Pivot with smallestRGroup - 1,
-		    putting the pivot in its final correct position.
+|
+|			[ 7 1 2 9 12 18 20 17 3 5 98 ... ]
+|			  |     |			  |
+|			Pivot   |			  |
+|			  smallestRGroup   nextElem
+|
+|		    The pivot is compared versus the nextElem. If is less, it is swapped with smallestRGroup (putting
+|		    the the small element in the beginning of the larger group) and incrementing smallestRGroup. If it
+|		    is larger, we just look at the next element. At the end we swap the Pivot with smallestRGroup - 1,
+|		    putting the pivot in its final correct position.
 |
 |  Parameters:
 |      array 	(IN/OUT) -- Array to be sorted (or subarray)
@@ -140,10 +178,10 @@ void runQSCmps(int* array, int len, char qsType[] )
 |      R 		(IN) 	-- The Right position of the subarray
 |
 |  Returns:  VOID
-*----------------------------------------------------------------------------*/
+*--------------------------------------------------------------------------------------------------------------*/
 void divAndConquerBFirst( int* const restrict array, const int L, const int R)
 {
-	// [restrict] tells the compiler that the array is only accessed by this particular pointer
+	// [restrict] restrict the array since it is only accessed by this particular pointer
 
 	// Base Case
 	if( L == R || L > R) { return; }
@@ -212,30 +250,32 @@ void divAndConquerBMiddle( int* const restrict array, const int L, const int R)
 	int n = R - L + 1;
 	int pivot;
 
-	int middlePos = ( n % 2 == 0 ) ? ( n/2 - 1 ) : ( n/2  );
+	int middlePos = ( n % 2 == 0 ) ? ( n/2 - 1 ) : ( n/2 );
 	middlePos += L; // Add offset
 
 	int First = array[L];
 	int Last = array[R];
 	int Middle = array[middlePos];
 
-	if( ( (First < Middle) && (Middle < Last)) || ((First > Middle) && (Middle > Last))){
+	if( ( (First < Middle) && (Middle < Last)) || ((First > Middle) && (Middle > Last)))
+	{
 		pivot = Middle;
 		array[middlePos] = array[L];
 		array[L] = pivot;
 	}
-	else if( ((Middle < First) && (First < Last)) || ((Middle > First) && (First > Last)) ) {
+	else if( ((Middle < First) && (First < Last)) || ((Middle > First) && (First > Last)) )
+	{
 		pivot = First;
 	}
-	else if( ((Middle < Last) && (Last < First)) || ((Middle > Last) && (Last > First)) ) {
+	else if( ((Middle < Last) && (Last < First)) || ((Middle > Last) && (Last > First)) )
+	{
 		pivot = Last;
 		array[R] = array[L];
 		array[L] = pivot;
 	}
-	else if( n == 2) {
+	else if( n == 2)
+	{
 		pivot = First;
-	} else {
-		printf("SHOULD NEVER BE IN HERE\n");
 	}
 
 	if (DEBUG == 1){
@@ -261,6 +301,38 @@ void divAndConquerBMiddle( int* const restrict array, const int L, const int R)
 	divAndConquerBMiddle( array, i, R);
 }
 
+void divAndConquerBRandom( int* const restrict array, const int L, const int R)
+{
+    // Base Case
+    if( L == R || L > R) { return; }
+
+    numberOfCmps += R - L;
+
+    // Choose Pivot
+    srand(time(0));
+    int n = R - L + 1;
+    int rndNum = rand() % n;
+    swap(&array[L], &array[ L + rndNum ]);
+    int pivot = array[L];
+
+    // Partition
+    int smallestRGroup = L + 1;
+    for( int nextElem = L + 1; nextElem <= R; nextElem++ )
+    {
+        if( pivot > array[nextElem] )
+        {
+            swap(&array[smallestRGroup], &array[nextElem]);
+            smallestRGroup++;
+        }
+    }
+    array[L] = array[smallestRGroup - 1];
+    array[smallestRGroup-1] = pivot;
+
+    // Recurse
+    divAndConquerBFirst( array, L, smallestRGroup - 2 );
+    divAndConquerBFirst( array, smallestRGroup, R);
+}
+
 // Inline function makes the compiler copy this function into the code that calls it. Making it embedded in the
 // binary - meaning it will not have to call it during run time, it is embedded or "INLINED"
 inline void swap( int* A, int* B )
@@ -273,19 +345,20 @@ inline void swap( int* A, int* B )
 /*
 * This function reads the input array from file.
 */
-int* fileLoader(){
-	int* returnArray = (int*) malloc( INPUTSIZE * sizeof(int) );
+int* fileLoader()
+{
+	int* inputArray = (int*) malloc( INPUTSIZE * sizeof(int) );
 
-	FILE *myFile;
-	myFile = fopen("./src/input.txt", "r");
+	FILE *fileHandler;
+	fileHandler = fopen("./src/input.txt", "r");
 
 	for (int i = 0; i < INPUTSIZE; i++)
 	{
-		fscanf(myFile, "%d", &returnArray[i]);
+		fscanf(fileHandler, "%d", &inputArray[i]);
 	}
-	fclose(myFile);
+	fclose(fileHandler);
 
-	return returnArray;
+	return inputArray;
 }
 
 /*
@@ -294,13 +367,14 @@ int* fileLoader(){
 void printList( int* array, int len )
 {
 	printf("{ ");
-	for( int i = 0; i < len; i++)
+	for( int arrIdx = 0; arrIdx < len; arrIdx++)
 	{
-		printf("%d,", array[i]);
+		printf("%d,", array[arrIdx]);
 	}
 	printf(" }");
 }
 
+/*
 // A constant integer L (cannot be changed)
 const int aConstant;
 // A pointer POINTING to a CONSTANT data (data doesn't change)
@@ -309,4 +383,4 @@ const int* aConstantDataPtr;
 int* const aPtrThatCannotBeChanged;
 // A pointer that cannot change what its pointing to AND which points to constant data
 const int* const AConstDataANDconstPointer;
-
+*/
