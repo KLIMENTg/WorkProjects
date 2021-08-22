@@ -4,75 +4,92 @@
  Author      : KLIMENTg
  Version     :
  Copyright   : Your copyright notice
- Description : Time Benchmark program computes the time C takes to sort an unordered array
+ Description : Time Benchmark program computes the time C takes to count number
+               of inversions in an unsorted array of one million entries,
   	  	  	   in order to compare to Java Benchmark.
  	 	 	   Can be modified to count the number of inversions as it's Java counterpart.
  ============================================================================
  */
 
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <time.h>
 
 #define INPUTSIZE 100000
 
-int* fileLoader();
-int* divAndConqSort1(int* inArray, int n);
+int* fileLoader( char* filename );
+int* divAndConqSort1(int* inplaceArray, int n);
+
+unsigned long inversions = 0;
 
 /*
  * Initializes memory for an array and reads and loads data from InputFile into that array
  */
 
-int* fileLoader(){
-	FILE *myFile;
-	myFile = fopen("./src/InputFile.txt", "r");
+int* fileLoader( char* filename )
+{
+	FILE *fileHandler;
+	fileHandler = fopen(filename, "r");
 
 	//read file into array
-	int* tempArr = (int*) malloc( INPUTSIZE * sizeof(int) );
+	int* loadInput = (int*) malloc( INPUTSIZE * sizeof(int) );
 	int rowNumber;
 
 	for (rowNumber = 0; rowNumber < INPUTSIZE; rowNumber++)
 	{
-		fscanf(myFile, "%d", &tempArr[rowNumber]);
+	    if( fscanf(fileHandler, "%d", &loadInput[ rowNumber ]) != 1 )
+	    {
+	        printf("Input file '%s' has an invalid format: Must have only one number per line.\n", filename);
+	        exit(EXIT_FAILURE);
+	    }
 	}
+	fclose(fileHandler);
 
-	fclose(myFile);
-
-	return tempArr;
+	return loadInput;
 }
 
-int main(void)
+/*
+ * Note: Timing is not direct CPU clock cycles and depends on the computer load.
+ */
+int main()
 {
-    int* tempArr = fileLoader();
 	int n = INPUTSIZE;
-	int* sortedArr;
-	int* inputArr = (int*) malloc( n * sizeof(int) );
-
-	memcpy(inputArr, tempArr, n * sizeof(int));
+	char* filename = "./src/InputFile.txt";
+    int* inputArr = fileLoader( filename );
 
 	clock_t start_t, end_t;
 	start_t = clock();
-	sortedArr = divAndConqSort1(inputArr, n);
+	int* sortedArr = divAndConqSort1(inputArr, n);
 	end_t = clock();
 	double total_t = (double)(end_t - start_t) / CLOCKS_PER_SEC;
-	printf("Total time taken by CPU: %f\n", total_t  );
 
-	//testPrinter( sortedArr, n );
+	printf("Total time taken by CPU: %f\n", total_t  );
+	printf("Array size: %u\n", INPUTSIZE);
+	printf("Number of inversions: %lu \n", inversions );
+	printf("First 2 and last 2 elements (sorted check): %d, %d, ... , %d, %d",
+	        sortedArr[ 0 ], sortedArr[ 1 ], sortedArr[ n-2 ], sortedArr[ n-1 ] );
 
 	return EXIT_SUCCESS;
 }
 
 
 /*
- * This function sorts the input array.
+ * This function sorts the input array and uses the merge step of
+ * mergesort to piggy-back on and determine the number of
+ * inversions.
+ *
+ * @param [in/out] inplaceArray - input array which gets sorted in place
+ * @param [in] arrLength - length of the array
  */
-int* divAndConqSort1(int* inArray, int arrLength)
+int* divAndConqSort1(int* inplaceArray, int arrLength)
 {
 	int* mergeArr = (int*) malloc( arrLength * sizeof(int) );
 	int mid, rLen, lLen;
+
 	//Base Case
 	if (arrLength==1){
-		return inArray;
+		return inplaceArray;
 	}
 
 	// Recursive Stage
@@ -88,38 +105,40 @@ int* divAndConqSort1(int* inArray, int arrLength)
 		lLen = mid;
 		rLen = mid -1;
 	}
-	int* L = divAndConqSort1(inArray, lLen);
-	int* R = divAndConqSort1(inArray + mid, rLen);
+	int* L = divAndConqSort1(inplaceArray, lLen);
+	int* R = divAndConqSort1(inplaceArray + mid, rLen);
 
 	// Merge Stage
-	int i, j, k;
-	i=0, j=0, k=0;
-	for(k=0; k<arrLength; k++)
+	int leftIdx = 0, rightIdx = 0, mergedArrayIdx = 0;
+	for( mergedArrayIdx = 0; mergedArrayIdx < arrLength; mergedArrayIdx++ )
 	{
-		if(i == lLen){
-			mergeArr[k] = R[j];
-			j++;
+		if(leftIdx == lLen)
+		{
+			mergeArr[ mergedArrayIdx ] = R[ rightIdx ];
+			rightIdx++;
 			continue;
 		}
-		else if(j == rLen){
-			mergeArr[k] = L[i];
-			i++;
+		else if(rightIdx == rLen)
+		{
+			mergeArr[ mergedArrayIdx ] = L[ leftIdx ];
+			leftIdx++;
 			continue;
 		}
 
-		if(L[i] < R[j])
+		if(L[ leftIdx ] < R[ rightIdx ])
 		{
-			mergeArr[k] = L[i];
-			i++;
+			mergeArr[ mergedArrayIdx ] = L[ leftIdx ];
+			leftIdx++;
 		}
 		else
 		{
-			mergeArr[k] = R[j];
-			j++;
+			mergeArr[ mergedArrayIdx ] = R[ rightIdx ];
+			rightIdx++;
+			inversions = inversions + ( lLen - leftIdx );
 		}
 	}
 
-	memcpy(inArray, mergeArr,  arrLength * sizeof(int));
+	memcpy( inplaceArray, mergeArr,  arrLength * sizeof(int) );
 	free( mergeArr );
-	return inArray;
+	return inplaceArray;
 }

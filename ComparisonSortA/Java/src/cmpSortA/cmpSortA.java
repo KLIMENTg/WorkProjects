@@ -11,135 +11,129 @@ package cmpSortA;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
 
 public class cmpSortA {
+	final int inputArraySize = 100000;
+	final double ns = 1000000000.0;
 	long inversions = 0;
 	
+	
+	/*
+	 * Simple Test-Vectors generation and testing.
+	 * Versus a naive O(n^2) implementation vs O(n log(n)).
+	 */
 	public void test() {
 		int Array1[] = {1,4,3,2};
-		long answer = this.naiveInsertCount(Array1);
-		System.out.println(answer);
+		this.testNativeInversions(Array1);
 		
 		int Array2[] = {1,3,5,2,4,6};
-		answer = this.naiveInsertCount(Array2);
-		System.out.println(answer);
+		this.testNativeInversions(Array2);
 		
 		int Array3[] = {1,2,3,4,5,6};
-		answer = this.naiveInsertCount(Array3);
-		System.out.println(answer);
+		this.testNativeInversions(Array3);
 		
 		int Array4[] = {6,5,4,3,2,1};
-		answer = this.naiveInsertCount(Array4);
-		System.out.println(answer);
+		this.testNativeInversions(Array4);
 		
-		int[] myIntArray = readInputArray();
+		int[] inputInts = readInputArray();
 		
 		long startTime = System.nanoTime();
-		answer = this.naiveInsertCount(myIntArray);
+		long answer = this.naiveInsertCount(inputInts);
 		long estimatedTime = System.nanoTime() - startTime;
 		
-		System.out.println("Inversion count naively " + answer + " in " + estimatedTime / 1000000000.0 + " s");
+		System.out.println("Inversion count naively " + answer + " in " + estimatedTime / ns + " s");
         
-        inversions = 0;
-        
-    long beginTime = System.nanoTime();
-    List<Integer> hugeArray = convertArrayType( myIntArray );
-    
-    divAndConquer05( hugeArray );
-    long totalTime = System.nanoTime() - beginTime;
-        
-    System.out.println( "Original Array has: " + inversions + " number of INVersions in " + totalTime / 1000000000.0 + " s");
+	    List<Integer> inputList = convertArrayType( inputInts );
+	    
+	    inversions = 0;
+	    long beginTime = System.nanoTime();
+	    divAndConquer05( inputList );
+	    long totalTime = System.nanoTime() - beginTime;
+	    
+	    System.out.println( "Original Array has: " + inversions + " number of Inversions in " + totalTime / ns + " s");
     }
 	
+	/*
+	 * Count of array inversions for testing purpose.
+	 */
 	public void testNativeInversions( int Array[] ) {
-		long inversions = naiveInsertCount(Array);
-		System.out.println( "Naive Inversions: " + inversions + "." );
+		naiveInsertCount(Array);
+		System.out.println( "Naive Inversions: " + inversions + " For: " + Arrays.toString( Array ) + "." );
 	}
-	
-//	public void testMergeInversions( int Array[], boolean printArray ) {
-//		inversions = 0;
-//		List<Integer> integerList = loadList( Array );
-//		divAndConquer05( integerList );
-//        
-//        if( printArray == true ) {
-//        	System.out.println( "Merge Inversions: " + inversions + " for array: " + integerList.toString() );	
-//        } else {
-//        	System.out.println( "Merge Inversions: " + inversions + "." );
-//        }
-//        
-//	}
-//	
-//	public List<Integer> loadList( int Array[] ) {
-//		List<Integer> intList = new ArrayList<Integer>();
-//		
-//		for( int i = 0; i < Array.length; i++ ) {
-//			intList.add( Array[i] );
-//		}
-//		
-//		return intList;
-//	}
 	
 	/*
 	 * This function converts the original input array type
-	 * from ordinary (primitive) integer array into the
+	 * from primitive integer array into the
 	 * non-primitive data structure ArrayList<Integer>
 	 */
-	public List<Integer> convertArrayType( int Array[] ) {
-		List<Integer> newArrayType = new ArrayList<Integer>();
+	public List<Integer> convertArrayType( int input[] ) {
+		List<Integer> integerList = new ArrayList<Integer>();
 		
-		for( int i = 0; i < Array.length; i++ ) {
-			newArrayType.add( Array[i] );
+		for( int intIdx = 0; intIdx < input.length; intIdx++ ) {
+			integerList.add( input[ intIdx ] );
 		}
 		
-		return newArrayType;
+		return integerList;
 	}
 	
 	/*
-	 * This function reads the input array from file.
+	 * This function reads the input array from file. Stores
+	 * the list of integers in a primitive int array.
 	 */
 	public int[] readInputArray() {
-		int[] myIntArray = new int[100000];
+		int[] inputArray = new int[ inputArraySize ];
 		try {
-			 File myObj = new File("./src/cmpSortA/InputFile.txt");
-		     Scanner myReader = new Scanner(myObj);
-		     int k=0;
-		     while (myReader.hasNextLine()) {
-		        String data = myReader.nextLine();
-		        int a = Integer.parseInt(data);
-		        myIntArray[k++] = a;	        
+			 File fileHandler = new File("./src/cmpSortA/InputFile.txt");
+		     Scanner fileScanner = new Scanner(fileHandler);
+		     
+		     int integerIdx = 0;
+		     while ( fileScanner.hasNextLine() ) {
+		        String fileLine = fileScanner.nextLine();
+		        int inputInt = Integer.parseInt( fileLine );
+		        inputArray[ integerIdx++ ] = inputInt;	        
 		      }
-		      myReader.close();
+		      fileScanner.close();
+		      
 		} catch (FileNotFoundException e) {
 		      System.out.println("An error occurred.");
 		      e.printStackTrace();
 		      return new int [1];
 		}
-		return myIntArray;
+		return inputArray;
 	}
 	
 	/*
-	 * This function counts the number of inversions naively
+	 * This function counts the number of inversions. In
+	 * a nested for-loop, by the definition of an inversion
+	 * a left element is greater than an element to the right.
+	 * RunTime O(n^2).
 	 */
 	public long naiveInsertCount(int Array[]) {
-		long inv = 0;
-		for( int i=0; i < Array.length; i++ ) {
-			for( int j=i+1; j < Array.length; j++ ) {
-				if( Array[i] > Array[j] ){
-					inv++;
+		long localInversions = 0; // Improved speed, versus loop-modification of class variable
+		
+		for( int leftPos = 0; leftPos < Array.length; leftPos++ ) {
+			for( int rightPos = leftPos + 1; rightPos < Array.length; rightPos++ ) {
+				if( Array[ leftPos ] > Array[ rightPos ] ){
+					localInversions++;
 				}
 			}
 		}
-		return inv;
+		inversions = localInversions;
+		return inversions;
 	}
 	
 	/*
 	 * This function counts the number of inversions,
-	 * while sorting the input array.
+	 * while sorting the input array. A piggy-back
+	 * onto the respective merge step of mergesort
+	 * with an near-optimal run time of O(n log(n)). 
 	 */
 	public List<Integer> divAndConquer05( List<Integer> inputArr ) {
+		long localInversions = 0; // Local inversions count for optimization
 		
 		// Base Case
 		if( inputArr.size() == 1 ) {
@@ -151,12 +145,12 @@ public class cmpSortA {
 		List<Integer> L = divAndConquer05( inputArr.subList(0, n/2) );
 		List<Integer> R = divAndConquer05( inputArr.subList(n/2, n) );
 		
-		// Put together
+		// Merge
 		int leftIndex = 0;
 		int rightIndex = 0; 
 		List<Integer> sortedArr = new ArrayList<Integer>();
 		
-		for( int k = 0; k < n; k++ ) {
+		for( int sortedArrayIdx = 0; sortedArrayIdx < n; sortedArrayIdx++ ) {
 			if( L.size() == leftIndex ) {
 				sortedArr.add( R.get(rightIndex) );
 				rightIndex++;
@@ -173,15 +167,16 @@ public class cmpSortA {
 			} else {
 				sortedArr.add( R.get(rightIndex) );
 				rightIndex++;
-				inversions = inversions + (L.size() - leftIndex);
+				localInversions = localInversions + (L.size() - leftIndex);
 			}
 		}
+		inversions += localInversions;
 		return sortedArr;
 	}
 	
 	public static void main(String[] args) {
-		cmpSortA myMainObj = new cmpSortA();
-		myMainObj.test();
+		cmpSortA inversionObj = new cmpSortA();
+		inversionObj.test();
 	}
   
 }
