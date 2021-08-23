@@ -92,11 +92,11 @@ public class RandomContraction {
 	public void replaceEntries( int eliminationNode, int replacementNode ) {
 
 		for (int srcIdx = 0; srcIdx < this.adjacencyList.size(); srcIdx++) {
-            for (int destIdx = 0; destIdx < this.adjacencyList.get(srcIdx).size(); destIdx++) {
-               if( this.adjacencyList.get( srcIdx ).get( destIdx ) == eliminationNode ) {
-            	   this.adjacencyList.get( srcIdx ).set( destIdx, replacementNode );
-               }
-            }
+			for (int destIdx = 0; destIdx < this.adjacencyList.get(srcIdx).size(); destIdx++) {
+			   if( this.adjacencyList.get( srcIdx ).get( destIdx ) == eliminationNode ) {
+				   this.adjacencyList.get( srcIdx ).set( destIdx, replacementNode );
+			   }
+			}
 		}
 	}
 	
@@ -161,24 +161,24 @@ public class RandomContraction {
 	 */
 	public int getMinCut(int numIterations, String filename) {
 		int minCut = maxMinCut;
-
-        for( int iter = 0; iter < numIterations; iter++) {
-        	this.importGraph( filename );
-        	while( this.nodeList.size() > 2 ) {
+		
+		for( int iter = 0; iter < numIterations; iter++) {
+			this.importGraph( filename );
+			while( this.nodeList.size() > 2 ) {
 				int startNode = getRandomNode(this.nodeList); // [1]
 				
 				int endNode = getRandomNode( // [2]
 						this.adjacencyList.get( startNode-1 ).subList( 1, this.adjacencyList.get(startNode-1).size()) );
-
+				
 				this.mergeNodes(startNode, endNode);
-	        }
-	        
-	        int cut = this.adjacencyList.get(this.nodeList.get(0)-1).size()-1;
-		    if( cut < minCut ) {
-		    	minCut = cut;
-		    }
-        }
-        return minCut;
+			}
+			
+			int cut = this.adjacencyList.get(this.nodeList.get(0)-1).size()-1;
+			if( cut < minCut ) {
+				minCut = cut;
+			}
+		}
+		return minCut;
 	}
 	
 	/*
@@ -212,11 +212,11 @@ public class RandomContraction {
 	 * Constructor - Initialize adjacency and node lists.
 	 */
 	public RandomContraction( String filename ) {
-		this.adjacencyList = new ArrayList<ArrayList<Integer> >();
-	    this.nodeList = new ArrayList<Integer>();// allocate memory on heap
-	    
-	    this.importGraph( filename );
-	    numNodes = this.nodeList.size();
+        this.adjacencyList = new ArrayList<ArrayList<Integer> >();
+        this.nodeList = new ArrayList<Integer>();// allocate memory on heap
+        
+        this.importGraph( filename );
+        numNodes = this.nodeList.size();
 	}
 	
 	/*
@@ -225,13 +225,13 @@ public class RandomContraction {
 	 */
     public static void main(String[] args)
     {
-    	int numberIter = 100;
-    	String filename = "./src/minCut/nodeGraph.txt";
-    	
-    	RandomContraction rndContraction = new RandomContraction( filename );
-    	int minCut = rndContraction.getMinCut( numberIter, filename );
+        int numberIter = 100;
+        String filename = "./src/minCut/nodeGraph.txt";
         
-    	rndContraction.printer(minCut, numberIter);
+        RandomContraction rndContraction = new RandomContraction( filename );
+        int minCut = rndContraction.getMinCut( numberIter, filename );
+        
+        rndContraction.printer(minCut, numberIter);
     }
     
 }
