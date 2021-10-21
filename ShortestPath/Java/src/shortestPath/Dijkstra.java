@@ -11,9 +11,9 @@ public class Dijkstra{
 	
 	private ArrayList<ArrayList<Arcs> > adjacencyList;
 	ArrayList<Integer> exploredNodes; // Nodes explored
-	int [] shortestDistances; // Distances
-	final int n = 200; // Number of nodes in graph
-	final int INF = 10000000; // Large number used for infinity
+	private int [] shortestDistances; // Distances
+	private final int n = 200; // Number of nodes in graph
+	private final int INF = 10000000; // Large number used for infinity
 	
 	
 	/*
@@ -29,6 +29,7 @@ public class Dijkstra{
 	public void importGraph() {
 	
 			this.adjacencyList = new ArrayList<ArrayList<Arcs>>();
+			
 			this.exploredNodes = new ArrayList<Integer>();
 			
 			try {

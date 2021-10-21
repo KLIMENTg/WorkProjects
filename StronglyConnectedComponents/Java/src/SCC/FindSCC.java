@@ -342,7 +342,7 @@ public class FindSCC {
 	public static void main(String[] args)
     {   
         FindSCC scc = new FindSCC( false );
-		scc.importGraph();
+        scc.importGraph();
 		
 		System.out.println("Done Import File.");
 		scc.createAdjacencyLists();
